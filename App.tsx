@@ -6,12 +6,10 @@ import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AdminLoginScreen from './src/screens/AdminLoginScreen';
 import AdminDashboard from './src/screens/AdminDashboard';
-import SplashScreen from './src/screens/SplashScreen';
 
 type Screen = 'driver-login' | 'admin-login' | 'driver-dashboard' | 'admin-dashboard';
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('driver-login');
   const [driverData, setDriverData] = useState<any>(null);
   const [adminUsername, setAdminUsername] = useState<string>('');
@@ -30,10 +28,6 @@ export default function App() {
     setDriverData(null);
     setAdminUsername('');
     setCurrentScreen('driver-login');
-  };
-
-  const handleSplashComplete = () => {
-    setIsLoading(false);
   };
 
   const renderScreen = () => {
@@ -68,10 +62,6 @@ export default function App() {
         );
     }
   };
-
-  if (isLoading) {
-    return <SplashScreen onAnimationComplete={handleSplashComplete} />;
-  }
 
   return (
     <SafeAreaView style={styles.container}>

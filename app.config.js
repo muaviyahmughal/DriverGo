@@ -1,31 +1,27 @@
 module.exports = {
   name: 'GoDriver',
-  slug: 'godriver',
+  slug: 'expo-ts-app',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
   newArchEnabled: true,
+  splash: {
+    image: './assets/splash-icon.png',
+    resizeMode: 'contain',
+    backgroundColor: '#F2EDE1'
+  },
   assetBundlePatterns: ["assets/*"],
   jsEngine: 'hermes',
-  plugins: [
-    [
-      'expo-splash-screen',
-      {
-        enabled: false,
-        androidSplashImage: null,
-        iosSplashImage: null
-      }
-    ]
-  ],
+  plugins: ["./plugins/expo-splash.js"],
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.sufyanmughal522.godriver'
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#ffffff'
+      foregroundImage: './assets/icon.png',
+      backgroundColor: '#F2EDE1'
     },
     edgeToEdgeEnabled: true,
     package: 'com.sufyanmughal522.godriver'
