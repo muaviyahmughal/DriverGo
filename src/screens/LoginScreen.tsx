@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   Image,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Modal
 } from 'react-native';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import app from '../config/firebase';
+import { saveDriverCivilId, getSavedCivilId, clearSavedCivilId } from '../storage/auth';
 
 interface LoginScreenProps {
   onLogin: (driverData: any) => void;
@@ -22,10 +24,37 @@ export default function LoginScreen({ onLogin, onAdminPress }: LoginScreenProps)
   const [civilId, setCivilId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+  const handleCivilIdChange = (text: string) => {
+    // Only allow digits and limit to 12 characters
+    const numericOnly = text.replace(/[^0-9]/g, '');
+    if (numericOnly.length <= 12) {
+      setCivilId(numericOnly);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedCivilId();
+  }, []);
+
+  const loadSavedCivilId = async () => {
+    const savedId = await getSavedCivilId();
+    if (savedId) {
+      setCivilId(savedId);
+      setRememberMe(true);
+    }
+  };
 
   const handleLogin = async () => {
     if (!civilId.trim()) {
       setError('Please enter your Civil ID');
+      return;
+    }
+
+    if (civilId.length !== 12) {
+      setError('Civil ID must be 12 digits');
       return;
     }
 
@@ -42,6 +71,11 @@ export default function LoginScreen({ onLogin, onAdminPress }: LoginScreenProps)
         setError('Invalid Civil ID');
       } else {
         const driverData = querySnapshot.docs[0].data();
+        if (rememberMe) {
+          await saveDriverCivilId(civilId);
+        } else {
+          await clearSavedCivilId();
+        }
         onLogin(driverData);
       }
     } catch (err) {
@@ -51,6 +85,35 @@ export default function LoginScreen({ onLogin, onAdminPress }: LoginScreenProps)
       setLoading(false);
     }
   };
+
+  const HelpModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={showHelp}
+      onRequestClose={() => setShowHelp(false)}
+    >
+      <TouchableWithoutFeedback onPress={() => setShowHelp(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Civil ID Format</Text>
+            <Text style={styles.modalText}>
+              • Enter your 12-digit Civil ID number{'\n'}
+              • Example: 292624047141{'\n'}
+              • Only numbers are allowed{'\n'}
+              • Must be exactly 12 digits
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowHelp(false)}
+            >
+              <Text style={styles.modalButtonText}>Got it!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -65,26 +128,49 @@ export default function LoginScreen({ onLogin, onAdminPress }: LoginScreenProps)
         </View>
 
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={civilId}
-            onChangeText={setCivilId}
-            placeholder="Enter Civil ID"
-            keyboardType="number-pad"
-            clearButtonMode="while-editing"
-            returnKeyType="go"
-            onSubmitEditing={handleLogin}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.input}
+              value={civilId}
+              onChangeText={handleCivilIdChange}
+              placeholder="Enter 12-digit Civil ID"
+              keyboardType="number-pad"
+              clearButtonMode="while-editing"
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+              placeholderTextColor="#666"
+              maxLength={12}
+            />
+            <TouchableOpacity
+              style={styles.helpButton}
+              onPress={() => setShowHelp(true)}
+            >
+              <Text style={styles.helpButtonText}>?</Text>
+            </TouchableOpacity>
+          </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+          <TouchableOpacity
+            style={styles.rememberContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.rememberText}>Remember Me</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity 
-            style={styles.loginButton}
+            style={[
+              styles.loginButton,
+              civilId.length !== 12 && styles.loginButtonDisabled
+            ]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || civilId.length !== 12}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#F2EDE1" />
             ) : (
               <Text style={styles.loginButtonText}>Driver Login</Text>
             )}
@@ -97,26 +183,17 @@ export default function LoginScreen({ onLogin, onAdminPress }: LoginScreenProps)
             <Text style={styles.adminButtonText}>Login as Admin</Text>
           </TouchableOpacity>
         </View>
+
+        <HelpModal />
       </View>
     </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  adminButton: {
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  adminButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2EDE1',
     padding: 20,
   },
   logoContainer: {
@@ -138,32 +215,131 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
   },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#2FA166',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    marginBottom: 15,
+    color: '#333',
+    letterSpacing: 1,
+  },
+  helpButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#2FA166',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
     marginBottom: 15,
   },
+  helpButtonText: {
+    color: '#F2EDE1',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  rememberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#2FA166',
+    borderRadius: 4,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#2FA166',
+  },
+  checkmark: {
+    color: '#F2EDE1',
+    fontSize: 14,
+  },
+  rememberText: {
+    color: '#333',
+    fontSize: 14,
+  },
   loginButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2FA166',
     height: 50,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
   },
+  loginButtonDisabled: {
+    backgroundColor: '#2FA166',
+    opacity: 0.5,
+  },
   loginButtonText: {
-    color: '#fff',
+    color: '#F2EDE1',
     fontSize: 18,
     fontWeight: 'bold',
   },
+  adminButton: {
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  adminButtonText: {
+    color: '#2FA166',
+    fontSize: 16,
+  },
   errorText: {
-    color: '#ff3b30',
+    color: 'red',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#F2EDE1',
+    borderRadius: 15,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  modalButton: {
+    backgroundColor: '#2FA166',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  modalButtonText: {
+    color: '#F2EDE1',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

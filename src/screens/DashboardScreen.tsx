@@ -97,7 +97,7 @@ export default function DashboardScreen({ driverData, onLogout }: DashboardScree
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F2EDE1',
   },
   scrollView: {
     flex: 1,
@@ -134,29 +134,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   logoutText: {
-    color: '#007AFF',
+    color: '#2FA166',
     fontSize: 16,
   },
   rankCard: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2FA166',
     borderRadius: 12,
     padding: 20,
     marginBottom: 24,
     alignItems: 'center',
   },
   rankTitle: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(242, 237, 225, 0.8)',
     fontSize: 16,
     marginBottom: 8,
   },
   rankValue: {
-    color: '#fff',
+    color: '#F2EDE1',
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   orgName: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#F2EDE1',
     fontSize: 16,
   },
   sectionTitle: {
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2FA166',
     marginBottom: 4,
   },
   statTitle: {

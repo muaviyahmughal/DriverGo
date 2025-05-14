@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -9,7 +9,6 @@ import {
   Image,
   TouchableWithoutFeedback,
   Keyboard,
-  Platform,
   ScrollView
 } from 'react-native';
 import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
@@ -28,13 +27,6 @@ export default function AdminLoginScreen({ onBack, onAdminLogin }: AdminLoginScr
   
   const usernameInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      usernameInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -88,41 +80,48 @@ export default function AdminLoginScreen({ onBack, onAdminLogin }: AdminLoginScr
           </View>
 
           <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Username</Text>
             <TextInput
               ref={usernameInputRef}
               style={styles.input}
               value={username}
               onChangeText={setUsername}
-              placeholder="Username"
+              placeholder="Enter username"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
               blurOnSubmit={false}
+              placeholderTextColor="#666"
             />
 
+            <Text style={styles.inputLabel}>Password</Text>
             <TextInput
               ref={passwordInputRef}
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="Password"
+              placeholder="Enter password"
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="go"
               onSubmitEditing={handleLogin}
+              placeholderTextColor="#666"
             />
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <TouchableOpacity 
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              style={[
+                styles.loginButton, 
+                (!username.trim() || !password.trim()) && styles.loginButtonDisabled
+              ]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || !username.trim() || !password.trim()}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#F2EDE1" />
               ) : (
                 <Text style={styles.loginButtonText}>Login as Admin</Text>
               )}
@@ -134,6 +133,16 @@ export default function AdminLoginScreen({ onBack, onAdminLogin }: AdminLoginScr
             >
               <Text style={styles.backButtonText}>Back to Driver Login</Text>
             </TouchableOpacity>
+
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementsTitle}>Login Requirements:</Text>
+              <Text style={styles.requirementsText}>
+                • Username must match exactly{'\n'}
+                • Password is case-sensitive{'\n'}
+                • No extra spaces allowed{'\n'}
+                • Both fields are required
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -144,9 +153,10 @@ export default function AdminLoginScreen({ onBack, onAdminLogin }: AdminLoginScr
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2EDE1',
   },
   container: {
+    flex: 1,
     padding: 24,
     justifyContent: 'flex-start',
   },
@@ -169,19 +179,25 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
   },
+  inputLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#2FA166',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     marginBottom: 15,
-    color: '#000',
+    color: '#333',
   },
   loginButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2FA166',
     height: 50,
     borderRadius: 10,
     justifyContent: 'center',
@@ -189,10 +205,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.5,
   },
   loginButtonText: {
-    color: '#fff',
+    color: '#F2EDE1',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -204,12 +220,31 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   backButtonText: {
-    color: '#007AFF',
+    color: '#2FA166',
     fontSize: 16,
   },
   errorText: {
-    color: '#ff3b30',
+    color: 'red',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  requirementsContainer: {
+    marginTop: 30,
+    padding: 16,
+    backgroundColor: 'rgba(47, 161, 102, 0.1)',
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2FA166',
+  },
+  requirementsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  requirementsText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
   },
 });

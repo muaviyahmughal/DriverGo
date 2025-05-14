@@ -1,48 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
-import { Platform, SafeAreaView, StyleSheet, View } from 'react-native';
-import { useState, useEffect } from 'react';
-import * as SplashScreen from 'expo-splash-screen';
+import { Platform, SafeAreaView, StyleSheet } from 'react-native';
+import { useState } from 'react';
 import app from './src/config/firebase';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AdminLoginScreen from './src/screens/AdminLoginScreen';
 import AdminDashboard from './src/screens/AdminDashboard';
-import CustomSplashScreen from './src/screens/SplashScreen';
+import SplashScreen from './src/screens/SplashScreen';
 
 type Screen = 'driver-login' | 'admin-login' | 'driver-dashboard' | 'admin-dashboard';
 
 export default function App() {
-  const [isReady, setIsReady] = useState(false);
-  const [showCustomSplash, setShowCustomSplash] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>('driver-login');
   const [driverData, setDriverData] = useState<any>(null);
   const [adminUsername, setAdminUsername] = useState<string>('');
-
-  useEffect(() => {
-    async function prepare() {
-      try {
-        await SplashScreen.preventAutoHideAsync();
-        // Pre-load fonts, make API calls, etc
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setIsReady(true);
-      }
-    }
-
-    prepare();
-  }, []);
-
-  useEffect(() => {
-    if (isReady) {
-      SplashScreen.hideAsync().catch(console.warn);
-    }
-  }, [isReady]);
-
-  const handleCustomSplashComplete = () => {
-    setShowCustomSplash(false);
-  };
 
   const handleDriverLogin = (data: any) => {
     setDriverData(data);
@@ -58,6 +30,10 @@ export default function App() {
     setDriverData(null);
     setAdminUsername('');
     setCurrentScreen('driver-login');
+  };
+
+  const handleSplashComplete = () => {
+    setIsLoading(false);
   };
 
   const renderScreen = () => {
@@ -93,12 +69,8 @@ export default function App() {
     }
   };
 
-  if (!isReady) {
-    return null;
-  }
-
-  if (showCustomSplash) {
-    return <CustomSplashScreen onAnimationComplete={handleCustomSplashComplete} />;
+  if (isLoading) {
+    return <SplashScreen onAnimationComplete={handleSplashComplete} />;
   }
 
   return (
@@ -112,7 +84,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2EDE1',
     paddingTop: Platform.OS === 'android' ? 25 : 0,
   },
 });

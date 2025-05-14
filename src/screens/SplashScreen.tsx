@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -13,20 +13,22 @@ interface SplashScreenProps {
 }
 
 export default function SplashScreen({ onAnimationComplete }: SplashScreenProps) {
-  // Create animated values
-  const spinValue = new Animated.Value(0);
-  const fadeValue = new Animated.Value(1);
+  // Create animated value using useRef to persist between renders
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const fadeValue = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Start spinning animation
-    Animated.loop(
+    // Start rotation animation
+    const spinAnimation = Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
-        duration: 2000,
+        duration: 1000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
+    );
+
+    spinAnimation.start();
 
     // After 2.5 seconds, start fade out animation
     const timer = setTimeout(() => {
@@ -41,7 +43,10 @@ export default function SplashScreen({ onAnimationComplete }: SplashScreenProps)
       });
     }, 2500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      spinAnimation.stop();
+      clearTimeout(timer);
+    };
   }, []);
 
   // Interpolate the spin value to rotate from 0 to 360 degrees
@@ -72,7 +77,7 @@ export default function SplashScreen({ onAnimationComplete }: SplashScreenProps)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F2EDE1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -86,7 +91,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 3,
-    borderColor: '#007AFF',
+    borderColor: '#2FA166',
     borderTopColor: 'transparent',
   },
 });
